@@ -65,7 +65,7 @@ if __name__ == "__main__":
     model.add(Flatten())
     #model.add(Dense(512))
     model.add(Dense(1, activation='sigmoid'))
-    model.compile(keras.optimizers.Adadelta(learning_rate=0.01),loss='binary_crossentropy',metrics=['accuracy'])
+    model.compile(keras.optimizers.SGD(learning_rate=0.01),loss='binary_crossentropy',metrics=['accuracy'])
     path = sys.argv[1]
     name = getListOfFiles(path)
     

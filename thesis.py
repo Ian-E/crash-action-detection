@@ -57,10 +57,10 @@ if __name__ == "__main__":
                        , recurrent_activation='hard_sigmoid'
                        , activation='tanh'
                        , padding='same', return_sequences=True))
-    model.add(Conv2D(128, kernel_size=(3,3), data_format="channels_last"))
+    model.add(TimeDistributed(Conv2D(128, kernel_size=(3,3), data_format="channels_last")))
     model.add(ReLU())
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(TimeDistributed(BatchNormalization()))
+    model.add(TimeDistributed(MaxPooling2D(pool_size=(2, 2))))
     #flatten to send to dense layers
     model.add(Flatten())
     #model.add(Dense(512))

@@ -37,12 +37,12 @@ if __name__ == "__main__":
                       #, recurrent_activation='hard_sigmoid'
                       #, activation='tanh'
                       #, padding='same', return_sequences=True, input_shape=(int(100/frames),int(720/8),int(1280/8),3)))
-    model.add(Conv3D(32, kernel_size=(1, 16, 9), input_shape=(int(100/frames),int(720/8),int(1280/8), 3)))
+    model.add(Conv3D(32, kernel_size=(2, 5, 3), input_shape=(int(100/frames),int(720/8),int(1280/8), 3)))
     #input_shape=(int(100/frames),int(720/8),int(1280/8), 3)
     model.add(LeakyReLU())
     model.add(TimeDistributed(BatchNormalization()))
     model.add(MaxPooling3D(pool_size=(1, 2, 2)))
-    model.add(Conv3D(64, kernel_size=(1,16,9), data_format="channels_last"))
+    model.add(Conv3D(64, kernel_size=(2,5,3), data_format="channels_last"))
     model.add(LeakyReLU())
     model.add(TimeDistributed(BatchNormalization()))
     model.add(MaxPooling3D(pool_size=(1, 2, 2)))
@@ -52,16 +52,20 @@ if __name__ == "__main__":
     #model.add(MaxPooling3D(pool_size=(2, 2, 2)))
     #normalize data before sending to lstm
    
-    model.add(ConvLSTM2D(filters=64, kernel_size=(16, 9)
+    model.add(ConvLSTM2D(filters=64, kernel_size=(5, 3)
                        , data_format='channels_last'
                        , recurrent_activation='hard_sigmoid'
                        , activation='tanh'
                        , padding='same', return_sequences=True))
+    model.add(Conv2D(128, kernel_size=(3,3), data_format="channels_last"))
+    model.add(ReLU())
+    model.add(BatchNormalization())
+    model.add(MaxPooling2D(pool_size=(2, 2)))
     #flatten to send to dense layers
     model.add(Flatten())
     #model.add(Dense(512))
     model.add(Dense(1, activation='sigmoid'))
-    model.compile(keras.optimizers.Adadelta(learning_rate=1.0),loss='binary_crossentropy',metrics=['accuracy'])
+    model.compile(keras.optimizers.Adadelta(learning_rate=0.01),loss='binary_crossentropy',metrics=['accuracy'])
     path = sys.argv[1]
     name = getListOfFiles(path)
     
@@ -94,31 +98,31 @@ if __name__ == "__main__":
             frame = cv2.resize(frame, (int(1280/8), int(720/8)))
             frameList.append(frame)
         x.append(frameList)
-        video = cv2.VideoCapture(fileN)
-        frameList = []
-        while True:
-            done, frame = video.read()
-            if int(video.get(cv2.CAP_PROP_POS_FRAMES)) % frames != 0:
-                continue
-            if not done:
-                video.release()
-                break
-            frame = cv2.flip(frame, 1)
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame = cv2.resize(frame, (int(1280/8), int(720/8)))
+        #video = cv2.VideoCapture(fileN)
+        #frameList = []
+        #while True:
+            #done, frame = video.read()
+            #if int(video.get(cv2.CAP_PROP_POS_FRAMES)) % frames != 0:
+                #continue
+            #if not done:
+                #video.release()
+                #break
+            #frame = cv2.flip(frame, 1)
+            #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            #frame = cv2.resize(frame, (int(1280/8), int(720/8)))
            
-            frameList.append(frame)
-        x.append(frameList)
+            #frameList.append(frame)
+        #x.append(frameList)
         
         tempName = fileN.split("/")
         print(tempName)
         if tempName[-2] == "positive":
             y.append(1)
-            y.append(1)
+            #y.append(1)
             #y.append(1)
         else:
             y.append(0)
-            y.append(0)
+            #y.append(0)
             #y.append(0)
     #print(x.shape)
     x, x_val, y, y_val = train_test_split(x, y, test_size=.1)

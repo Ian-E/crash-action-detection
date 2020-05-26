@@ -98,31 +98,31 @@ if __name__ == "__main__":
             frame = cv2.resize(frame, (int(1280/8), int(720/8)))
             frameList.append(frame)
         x.append(frameList)
-        #video = cv2.VideoCapture(fileN)
-        #frameList = []
-        #while True:
-            #done, frame = video.read()
-            #if int(video.get(cv2.CAP_PROP_POS_FRAMES)) % frames != 0:
-                #continue
-            #if not done:
-                #video.release()
-                #break
-            #frame = cv2.flip(frame, 1)
-            #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            #frame = cv2.resize(frame, (int(1280/8), int(720/8)))
+        video = cv2.VideoCapture(fileN)
+        frameList = []
+        while True:
+            done, frame = video.read()
+            if int(video.get(cv2.CAP_PROP_POS_FRAMES)) % frames != 0:
+                continue
+            if not done:
+                video.release()
+                break
+            frame = cv2.flip(frame, 1)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame = cv2.resize(frame, (int(1280/8), int(720/8)))
            
-            #frameList.append(frame)
-        #x.append(frameList)
+            frameList.append(frame)
+        x.append(frameList)
         
         tempName = fileN.split("/")
         print(tempName)
         if tempName[-2] == "positive":
             y.append(1)
-            #y.append(1)
+            y.append(1)
             #y.append(1)
         else:
             y.append(0)
-            #y.append(0)
+            y.append(0)
             #y.append(0)
     #print(x.shape)
     x, x_val, y, y_val = train_test_split(x, y, test_size=.1)

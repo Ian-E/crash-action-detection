@@ -30,42 +30,38 @@ def getListOfFiles(dirName):
 
 if __name__ == "__main__":
     size =1282
-    frames = 2
+    frames = 1
     model = Sequential()
     #model.add(ConvLSTM2D(filters=16, kernel_size=(3, 3)
                       #, data_format='channels_last'
                       #, recurrent_activation='hard_sigmoid'
                       #, activation='tanh'
                       #, padding='same', return_sequences=True, input_shape=(int(100/frames),int(720/8),int(1280/8),3)))
-    model.add(Conv3D(32, kernel_size=(3, 32, 18), input_shape=(int(100/frames),int(720/8),int(1280/8), 3)))
+    model.add(Conv3D(32, kernel_size=(15, 5,  5), input_shape=(int(100/frames),int(720/8),int(1280/8), 1)))
     #input_shape=(int(100/frames),int(720/8),int(1280/8), 3)
     model.add(ReLU())
-    model.add(TimeDistributed(BatchNormalization()))
-    model.add(MaxPooling3D(pool_size=(1, 2, 2)))
-    model.add(Conv3D(64, kernel_size=(3,32,18), data_format="channels_last"))
+    model.add(BatchNormalization())
+    model.add(MaxPooling3D(pool_size=(15, 2, 2)))
+    model.add(Conv3D(64, kernel_size=(2,5,5), data_format="channels_last"))
     model.add(LeakyReLU())
-    model.add(TimeDistributed(BatchNormalization()))
-    model.add(MaxPooling3D(pool_size=(1, 2, 2)))
+    model.add(BatchNormalization())
+    model.add(MaxPooling3D(pool_size=(2, 2, 2)))
     #model.add(Conv3D(128, kernel_size=(3,3,3), data_format="channels_last", activation='relu'))
     #model.add(MaxPooling3D(pool_size=(2, 2, 2)))
     #model.add(Conv3D(256, kernel_size=(1,1,1), data_format="channels_last", activation='relu'))
     #model.add(MaxPooling3D(pool_size=(2, 2, 2)))
     #normalize data before sending to lstm
    
-    model.add(ConvLSTM2D(filters=64, kernel_size=(5, 3)
+    model.add(ConvLSTM2D(filters=128, kernel_size=(5, 3)
                        , data_format='channels_last'
                        , recurrent_activation='hard_sigmoid'
                        , activation='tanh'
                        , padding='same', return_sequences=True))
-    model.add(TimeDistributed(Conv2D(128, kernel_size=(3,3), data_format="channels_last")))
-    model.add(ReLU())
-    model.add(TimeDistributed(BatchNormalization()))
-    model.add(TimeDistributed(MaxPooling2D(pool_size=(2, 2))))
     #flatten to send to dense layers
     model.add(Flatten())
     #model.add(Dense(512))
     model.add(Dense(1, activation='sigmoid'))
-    model.compile(keras.optimizers.Adadelta(learning_rate=0.01),loss='binary_crossentropy',metrics=['accuracy'])
+    model.compile(keras.optimizers.SGD(learning_rate=0.023),loss='binary_crossentropy',metrics=['accuracy'])
     path = sys.argv[1]
     name = getListOfFiles(path)
     
@@ -76,6 +72,7 @@ if __name__ == "__main__":
     x=[]
     y=[]
     for i, fileN in enumerate(name):
+        print(i)
         #if i%size ==0 and i != 0:
         #    x=np.array(x)
         #    print(x.shape)
@@ -94,37 +91,39 @@ if __name__ == "__main__":
             if not done:
                 video.release()
                 break
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             frame = cv2.resize(frame, (int(1280/8), int(720/8)))
             frameList.append(frame)
         x.append(frameList)
         video = cv2.VideoCapture(fileN)
         frameList = []
+        while True:
+            done, frame = video.read()
+            if int(video.get(cv2.CAP_PROP_POS_FRAMES)) % frames != 0:
+                continue
+            if not done:
+                video.release()
+                break
+            frame = cv2.flip(frame, 1)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            frame = cv2.resize(frame, (int(1280/8), int(720/8)))
         
+            frameList.append(frame)
+        x.append(frameList)
         tempName = fileN.split("/")
-        print(tempName)
         if tempName[-2] == "positive":
             y.append(1)
             y.append(1)
-            while True:
-                done, frame = video.read()
-                if int(video.get(cv2.CAP_PROP_POS_FRAMES)) % frames != 0:
-                    continue
-                if not done:
-                    video.release()
-                    break
-                frame = cv2.flip(frame, 1)
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                frame = cv2.resize(frame, (int(1280/8), int(720/8)))
             
-                frameList.append(frame)
-            x.append(frameList)
         else:
+            y.append(0)
             y.append(0)
     #print(x.shape)
     x, x_val, y, y_val = train_test_split(x, y, test_size=.1)
     x=np.array(x)
+    x = x[:, :, :, :, np.newaxis]
     x_val = np.array(x_val)
+    x_val = x_val[:, :, :, :,  np.newaxis]
     y = np.array(y)
     y_val = np.array(y_val)
     #callbacks = [
@@ -138,7 +137,7 @@ if __name__ == "__main__":
             #verbose=1)
     #]
     #print(labels)
-    model.fit(x, y, epochs=7, batch_size=5, validation_data=(x_val, y_val))
+    model.fit(x, y, epochs=20, batch_size=5, validation_data=(x_val, y_val))
 
 
    

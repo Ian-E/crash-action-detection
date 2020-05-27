@@ -25,7 +25,7 @@ def getListOfFiles(dirName):
 
 if __name__ == "__main__":
     size =1
-    frames = 2
+    frames = 1
 
     path = sys.argv[1]
     name = getListOfFiles(path)
@@ -40,6 +40,7 @@ if __name__ == "__main__":
     for i, fileN in enumerate(name):
         if i%size ==0 and i != 0:
             x = np.array(x)
+            x = x[:, :, :, :, np.newaxis]
             #print(x.shape)
             #labels = to_categorical(y)
             #print(labels)
@@ -57,7 +58,7 @@ if __name__ == "__main__":
             if not done:
                 video.release()
                 break
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             frame = cv2.resize(frame, (int(1280/8), int(720/8)))
             frameList.append(frame)
         x.append(frameList)
